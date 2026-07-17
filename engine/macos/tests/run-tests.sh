@@ -45,6 +45,8 @@ fi
 "$NODE" "$ROOT/scripts/injector.mjs" --check-payload >/dev/null
 "$NODE" "$ROOT/tests/image-metadata.test.mjs"
 "$NODE" "$ROOT/tests/theme-compiler.test.mjs"
+"$NODE" "$ROOT/tests/public-presets-v2.test.mjs"
+"$NODE" "$ROOT/tests/theme-export.test.mjs"
 "$NODE" "$ROOT/tests/compatibility-probe.test.mjs"
 "$NODE" "$ROOT/tests/enhanced-runtime-install.test.mjs"
 "$NODE" "$ROOT/tests/injector-bootstrap.test.mjs"
