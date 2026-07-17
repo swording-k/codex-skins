@@ -300,7 +300,7 @@ async function loadTheme(themeDir) {
     throw error;
   }
   const raw = JSON.parse(config);
-  if (raw.schemaVersion !== 1 || typeof raw.image !== "string" || !raw.image) {
+  if (![1, 2].includes(raw.schemaVersion) || typeof raw.image !== "string" || !raw.image) {
     throw new Error(`${configPath} has an unsupported schema or image field`);
   }
   if (/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/u.test(raw.image)) {
@@ -370,8 +370,51 @@ async function loadTheme(themeDir) {
     signalLights: boolean(rawMotion.signalLights, "motion.signalLights"),
     telemetry: boolean(rawMotion.telemetry, "motion.telemetry"),
   };
+  if (raw.ui !== undefined && (!raw.ui || typeof raw.ui !== "object" || Array.isArray(raw.ui))) {
+    throw new Error(`${configPath} has an invalid ui field`);
+  }
+  const rawUi = raw.ui || {};
+  const rawRoutes = rawUi.routes && typeof rawUi.routes === "object" && !Array.isArray(rawUi.routes)
+    ? rawUi.routes : {};
+  const route = (value, name) => {
+    if (value === undefined) return undefined;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`${configPath} has an invalid ${name} field`);
+    }
+    return {
+      surface: choice(value.surface, `${name}.surface`, ["transparent", "smoked", "glass-readable", "solid-readable"]),
+      opacity: unit(value.opacity, `${name}.opacity`),
+    };
+  };
+  const radius = rawUi.radius;
+  if (radius !== undefined && (!Number.isInteger(radius) || radius < 0 || radius > 12)) {
+    throw new Error(`${configPath} has an invalid ui.radius field`);
+  }
+  const ui = {
+    profile: choice(rawUi.profile, "ui.profile", ["native", "gt-control"]),
+    density: choice(rawUi.density, "ui.density", ["comfortable", "compact"]),
+    radius,
+    routes: {
+      home: route(rawRoutes.home, "ui.routes.home"),
+      task: route(rawRoutes.task, "ui.routes.task"),
+    },
+  };
+  if (raw.decorations !== undefined && (!Array.isArray(raw.decorations) || raw.decorations.length > 3)) {
+    throw new Error(`${configPath} has an invalid decorations field`);
+  }
+  const decorations = (raw.decorations || []).map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.interactive !== false) {
+      throw new Error(`${configPath} has an invalid decorations[${index}] field`);
+    }
+    return {
+      type: choice(entry.type, `decorations[${index}].type`, ["masthead", "status-strip", "corner-frame"]),
+      slot: choice(entry.slot, `decorations[${index}].slot`, ["home-top", "home-bottom", "shell-corners"]),
+      text: text(entry.text, "", 80, `decorations[${index}].text`),
+      interactive: false,
+    };
+  });
   const theme = {
-    schemaVersion: 1,
+    schemaVersion: raw.schemaVersion,
     id: text(raw.id, "custom", 80, "id"),
     name: text(raw.name, "Codex Dream Skin", 80, "name"),
     brandSubtitle: text(raw.brandSubtitle, "CODEX DREAM SKIN", 80, "brandSubtitle"),
@@ -403,6 +446,13 @@ async function loadTheme(themeDir) {
   if (Object.values(motion).some((value) => value !== undefined)) {
     theme.motion = Object.fromEntries(Object.entries(motion).filter(([, value]) => value !== undefined));
   }
+  if (raw.ui !== undefined) {
+    theme.ui = {
+      ...Object.fromEntries(Object.entries(ui).filter(([key, value]) => key !== "routes" && value !== undefined)),
+      routes: Object.fromEntries(Object.entries(ui.routes).filter(([, value]) => value !== undefined)),
+    };
+  }
+  if (raw.decorations !== undefined) theme.decorations = decorations;
   const requestedImagePath = path.join(assetsRoot, theme.image);
   let imagePath;
   try {
@@ -896,12 +946,15 @@ if (path.resolve(process.argv[1] || "") === path.resolve(scriptPath)) {
       console.log(JSON.stringify({
         pass: true,
         version: SKIN_VERSION,
+        schemaVersion: loaded.theme.schemaVersion,
         themeId: loaded.theme.id,
         themeName: loaded.theme.name,
         imageBytes: loaded.imageBytes,
         payloadBytes: Buffer.byteLength(loaded.payload),
         artMetadata: loaded.theme.artMetadata ?? null,
         motion: loaded.theme.motion ?? null,
+        ui: loaded.theme.ui ?? null,
+        decorations: loaded.theme.decorations ?? [],
         timings: loaded.timings,
       }, null, 2));
     } else if (options.mode === "watch") await runWatch(options);

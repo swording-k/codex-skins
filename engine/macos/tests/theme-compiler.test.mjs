@@ -2,13 +2,20 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 import { compileTheme } from "../scripts/compile-theme.mjs";
 
+const here = path.dirname(fileURLToPath(import.meta.url));
+const macosRoot = path.resolve(here, "..");
 const root = await fs.mkdtemp(path.join(os.tmpdir(), "dream-theme-compiler-"));
 
 try {
-  await fs.writeFile(path.join(root, "background.jpg"), "image");
+  await fs.copyFile(
+    path.join(macosRoot, "presets", "preset-midnight-aurora", "background.jpg"),
+    path.join(root, "background.jpg"),
+  );
 
   const source = {
     schemaVersion: 2,
@@ -47,6 +54,16 @@ try {
   assert.equal(compiled.ui.profile, "gt-control");
   assert.equal(compiled.ui.routes.task.surface, "glass-readable");
   assert.equal(compiled.decorations[0].interactive, false);
+  await fs.writeFile(path.join(root, "theme.json"), `${JSON.stringify(compiled, null, 2)}\n`);
+  const payload = JSON.parse(execFileSync(process.execPath, [
+    path.join(macosRoot, "scripts", "injector.mjs"),
+    "--check-payload",
+    "--theme-dir",
+    root,
+  ], { encoding: "utf8" }));
+  assert.equal(payload.schemaVersion, 2);
+  assert.equal(payload.ui.profile, "gt-control");
+  assert.equal(payload.decorations[0].type, "status-strip");
 
   await assert.rejects(
     () => compileTheme({ ...source, ui: { ...source.ui, profile: "raw-css" } }, root),
