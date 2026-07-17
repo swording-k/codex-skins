@@ -1,0 +1,11 @@
+.DS_Store
+
+# Local drafts and generated sources. Public theme packs only need
+# theme.json, background.jpg, preview.png, and README.md.
+dream-skin/**/source*.png
+dream-skin/**/*-v1-*
+dream-skin/**/*-draft*
+
+# Local archives.
+release/
+*.zip

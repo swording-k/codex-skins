@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "preset-iron-discipline",
+  "name": "铁律训练场",
+  "brandSubtitle": "CODEX DREAM SKIN",
+  "tagline": "像完成一组训练一样推进今天的任务。",
+  "projectPrefix": "选择项目 · ",
+  "projectLabel": "◉  选择项目",
+  "statusText": "STRENGTH MODE ONLINE",
+  "quote": "TRAIN WITH FOCUS",
+  "image": "background.jpg",
+  "appearance": "dark",
+  "art": {
+    "focusX": 0.73,
+    "focusY": 0.42,
+    "safeArea": "left",
+    "taskMode": "ambient"
+  },
+  "colors": {
+    "background": "#151412",
+    "panel": "#201f1c",
+    "panelAlt": "#2a2824",
+    "accent": "#b74732",
+    "accentAlt": "#d66a4c",
+    "secondary": "#b58b63",
+    "highlight": "#f0b36f",
+    "text": "#f4f0e8",
+    "muted": "#aaa197",
+    "line": "rgba(214, 106, 76, .24)"
+  }
+}
