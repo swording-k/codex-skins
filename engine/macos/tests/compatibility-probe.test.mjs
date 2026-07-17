@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 import { gradeProbe, selectCodexTarget } from "../scripts/compatibility-probe.mjs";
+
+const probeSource = await fs.readFile(fileURLToPath(new URL("../scripts/compatibility-probe.mjs", import.meta.url)), "utf8");
+assert.match(
+  probeSource,
+  /\[data-virtualized-turn-content\]/,
+  "task route probing should recognize the current Codex virtualized transcript container",
+);
 
 assert.deepEqual(
   gradeProbe({ shell: 1, sidebar: 1, composer: 1, cards: 1 }),
@@ -13,6 +22,13 @@ assert.equal(
 assert.deepEqual(
   gradeProbe({ shell: 1, sidebar: 1, composer: 1, cards: 0 }),
   { status: "degraded", missingCritical: [], missingOptional: ["cards"] },
+);
+assert.deepEqual(
+  gradeProbe(
+    { shell: 1, sidebar: 1, composer: 1, cards: 0, projectSelector: 1 },
+    { expectedOptional: ["projectSelector"] },
+  ),
+  { status: "compatible", missingCritical: [], missingOptional: [] },
 );
 assert.equal(
   selectCodexTarget([

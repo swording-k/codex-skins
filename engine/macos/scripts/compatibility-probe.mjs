@@ -3,10 +3,11 @@ import { pathToFileURL } from "node:url";
 const CRITICAL = ["shell", "sidebar", "composer"];
 const OPTIONAL = ["cards", "projectSelector", "transcript", "dialogs"];
 
-export function gradeProbe(counts) {
+export function gradeProbe(counts, { expectedOptional = null } = {}) {
   const source = counts && typeof counts === "object" ? counts : {};
   const missingCritical = CRITICAL.filter((name) => !Number.isFinite(source[name]) || source[name] < 1);
-  const missingOptional = OPTIONAL.filter((name) => Object.hasOwn(source, name) && source[name] < 1);
+  const optional = Array.isArray(expectedOptional) ? expectedOptional : OPTIONAL;
+  const missingOptional = optional.filter((name) => Object.hasOwn(source, name) && source[name] < 1);
   return {
     status: missingCritical.length ? "incompatible" : missingOptional.length ? "degraded" : "compatible",
     missingCritical,
@@ -78,17 +79,19 @@ export async function probeCodex(endpoint = "http://127.0.0.1:9341") {
         sidebar: count('aside.app-shell-left-panel'),
         composer: count('.composer-surface-chrome, .ProseMirror'),
         cards: count('.group\\\\/home-suggestions button'),
-        projectSelector: count('.group\\\\/project-selector'),
-        transcript: count('main.main-surface article, [data-message-author-role]'),
+        projectSelector: count('.dream-skin-home-shell .composer-surface-chrome, .group\\\\/project-selector'),
+        transcript: count('main.main-surface article, [data-message-author-role], [data-virtualized-turn-content], main.main-surface:not(.dream-skin-home-shell) .prose'),
         dialogs: count('[role="dialog"], [role="menu"]')
       },
+      route: document.querySelector('main.main-surface.dream-skin-home-shell') ? 'home' : 'task',
       activeThemeId: state.themeId || null,
       runtimeVersion: state.version || null,
       uiProfile: document.documentElement.getAttribute('data-dream-ui-profile'),
       url: location.href
     };
   })()`);
-  return { ...live, ...gradeProbe(live.counts), targetUrl: target.url };
+  const expectedOptional = live.route === "home" ? ["projectSelector"] : ["transcript"];
+  return { ...live, ...gradeProbe(live.counts, { expectedOptional }), targetUrl: target.url };
 }
 
 async function main() {
