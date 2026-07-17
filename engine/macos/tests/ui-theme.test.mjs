@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const renderer = await fs.readFile(path.join(root, "assets", "renderer-inject.js"), "utf8");
+const css = await fs.readFile(path.join(root, "assets", "dream-skin.css"), "utf8");
 
 for (const attribute of [
   "data-dream-ui-profile",
@@ -34,6 +35,31 @@ assert.match(
   renderer,
   /THEME_VARIABLES[\s\S]*--ds-ui-density/,
   "UI properties should be part of root cleanup state.",
+);
+
+assert.match(css, /data-dream-ui-profile="gt-control"/, "GT profile CSS should exist.");
+for (const capability of [
+  "aside.app-shell-left-panel",
+  "bg-token-list-hover-background",
+  "group\\/home-suggestions button",
+  "composer-surface-chrome",
+  "main.main-surface:not(.dream-skin-home-shell) article",
+  ":focus-visible",
+]) {
+  assert.ok(
+    css.includes(capability),
+    `GT profile should style ${capability}`,
+  );
+}
+assert.match(
+  css,
+  /data-dream-ui-profile="gt-control"[\s\S]*group\\\/home-suggestions button \*[\s\S]*color:\s*currentColor !important/,
+  "GT suggestion card descendants should inherit a readable foreground.",
+);
+assert.match(
+  css,
+  /data-dream-ui-profile="gt-control"\]\[data-dream-shell="dark"\][\s\S]*--ds-gt-sidebar:/,
+  "GT profile should define an explicit dark sidebar material.",
 );
 
 console.log("PASS: renderer maps and cleans complete UI profile state.");
