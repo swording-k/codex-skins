@@ -14,6 +14,15 @@ export function gradeProbe(counts) {
   };
 }
 
+export function selectCodexTarget(targets) {
+  const pages = Array.isArray(targets) ? targets.filter((candidate) => candidate.type === "page") : [];
+  return pages.find((candidate) => candidate.url === "app://-/index.html")
+    ?? pages.find((candidate) => /^app:\/\/-?\/index\.html(?:$|\?)/.test(candidate.url)
+      && !/avatar-overlay/i.test(candidate.url))
+    ?? pages.find((candidate) => /^app:\/\//.test(candidate.url) && !/avatar-overlay/i.test(candidate.url))
+    ?? null;
+}
+
 function argument(args, name, fallback) {
   const index = args.indexOf(`--${name}`);
   return index >= 0 && args[index + 1] ? args[index + 1] : fallback;
@@ -58,8 +67,7 @@ export async function probeCodex(endpoint = "http://127.0.0.1:9341") {
   const response = await fetch(`${endpoint.replace(/\/$/, "")}/json/list`);
   if (!response.ok) throw new Error(`Codex CDP returned HTTP ${response.status}`);
   const targets = await response.json();
-  const target = targets.find((candidate) => candidate.type === "page" && /^app:\/\//.test(candidate.url))
-    ?? targets.find((candidate) => candidate.type === "page");
+  const target = selectCodexTarget(targets);
   if (!target?.webSocketDebuggerUrl) throw new Error("No Codex page target was found");
   const live = await cdpEvaluate(target.webSocketDebuggerUrl, `(() => {
     const count = (selector) => document.querySelectorAll(selector).length;
