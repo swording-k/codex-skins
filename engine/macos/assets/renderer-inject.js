@@ -9,12 +9,16 @@
     "data-dream-art-safe-area", "data-dream-art-task-mode", "data-dream-art-aspect",
     "data-dream-art-ready", "data-dream-motion-profile", "data-dream-motion-rain",
     "data-dream-motion-signal-lights", "data-dream-motion-telemetry",
+    "data-dream-ui-profile", "data-dream-home-surface", "data-dream-task-surface",
+    "data-dream-decoration-profile",
   ];
   const VERSION = __DREAM_SKIN_VERSION_JSON__;
   const STYLE_REVISION = __DREAM_SKIN_STYLE_REVISION_JSON__;
   const THEME = themeConfig && typeof themeConfig === "object" ? themeConfig : {};
   const ART = THEME.art && typeof THEME.art === "object" ? THEME.art : {};
   const MOTION = THEME.motion && typeof THEME.motion === "object" ? THEME.motion : {};
+  const UI = THEME.ui && typeof THEME.ui === "object" ? THEME.ui : {};
+  const DECORATIONS = Array.isArray(THEME.decorations) ? THEME.decorations : [];
   const ART_METADATA = THEME.artMetadata && typeof THEME.artMetadata === "object"
     ? THEME.artMetadata : null;
   const ANALYSIS_CACHE_KEY = "__CODEX_DREAM_SKIN_ANALYSIS_CACHE__";
@@ -28,6 +32,7 @@
     "--dream-skin-focus-x", "--dream-skin-focus-y", "--dream-skin-art-position",
     "--dream-skin-name", "--dream-skin-tagline", "--dream-skin-project-prefix",
     "--dream-skin-project-label", "--dream-motion-intensity",
+    "--ds-ui-density", "--ds-ui-radius", "--ds-home-opacity", "--ds-task-opacity",
   ];
   const installToken = {};
   const existingAnalysisCache = window[ANALYSIS_CACHE_KEY];
@@ -370,6 +375,32 @@
     setStyleProperty(root, "--dream-motion-intensity", String(intensity));
   };
 
+  const applyUi = (root) => {
+    const profiles = new Set(["native", "gt-control"]);
+    const surfaces = new Set(["transparent", "smoked", "glass-readable", "solid-readable"]);
+    const profile = profiles.has(UI.profile) ? UI.profile : "native";
+    const density = UI.density === "compact" ? "compact" : "comfortable";
+    const radius = Number.isInteger(UI.radius) ? clamp(UI.radius, 0, 12) : 8;
+    const routes = UI.routes && typeof UI.routes === "object" ? UI.routes : {};
+    const home = routes.home && typeof routes.home === "object" ? routes.home : {};
+    const task = routes.task && typeof routes.task === "object" ? routes.task : {};
+    const homeSurface = surfaces.has(home.surface) ? home.surface : "smoked";
+    const taskSurface = surfaces.has(task.surface) ? task.surface : "glass-readable";
+    const homeOpacity = typeof home.opacity === "number" && Number.isFinite(home.opacity)
+      ? clamp(home.opacity, 0, 1) : 0.58;
+    const taskOpacity = typeof task.opacity === "number" && Number.isFinite(task.opacity)
+      ? clamp(task.opacity, 0, 1) : 0.88;
+
+    setAttribute(root, "data-dream-ui-profile", profile);
+    setAttribute(root, "data-dream-home-surface", homeSurface);
+    setAttribute(root, "data-dream-task-surface", taskSurface);
+    setAttribute(root, "data-dream-decoration-profile", DECORATIONS.length ? profile : "none");
+    setStyleProperty(root, "--ds-ui-density", density);
+    setStyleProperty(root, "--ds-ui-radius", `${radius}px`);
+    setStyleProperty(root, "--ds-home-opacity", String(homeOpacity));
+    setStyleProperty(root, "--ds-task-opacity", String(taskOpacity));
+  };
+
   const applyArtMetadata = (root) => {
     const profile = artAnalysis || ART_METADATA;
     const inferredSafe = profile?.safeArea || "center";
@@ -574,6 +605,7 @@
     setStyleProperty(root, "--dream-skin-art", `url("${artUrl}")`);
     applyTheme(root, shell);
     applyMotion(root);
+    applyUi(root);
     applyArtMetadata(root);
     root.classList.add("codex-dream-skin");
     return shell;

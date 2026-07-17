@@ -47,6 +47,7 @@ fi
 "$NODE" "$ROOT/tests/theme-compiler.test.mjs"
 "$NODE" "$ROOT/tests/injector-bootstrap.test.mjs"
 "$NODE" "$ROOT/tests/motion-theme.test.mjs"
+"$NODE" "$ROOT/tests/ui-theme.test.mjs"
 "$NODE" "$ROOT/tests/renderer-inject.test.mjs"
 "$NODE" "$ROOT/tests/theme-stage.test.mjs"
 
