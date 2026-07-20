@@ -1,4 +1,5 @@
 .DS_Store
+*.swp
 
 # Local drafts and generated sources. Public theme packs only need
 # theme.json, background.jpg, preview.png, and README.md.
@@ -16,3 +17,6 @@ private-themes/
 
 # Local visual brainstorming sessions.
 .superpowers/
+
+# Local browser verification screenshots.
+theme-studio/.verification*.png

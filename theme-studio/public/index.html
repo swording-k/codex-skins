@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Codex Theme Studio</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Codex Theme Creator</p>
+          <h1>Theme Studio</h1>
+          <p class="lede">选一套底图，调清晰度、遮罩、动态和强调色，保存成自己的 Codex 主题。</p>
+        </div>
+        <div class="steps">
+          <span>1 选择主题</span>
+          <span>2 调整效果</span>
+          <span>3 保存并启用</span>
+        </div>
+        <button class="primary" id="refresh">刷新主题列表</button>
+      </aside>
+
+      <section class="workspace">
+        <header class="toolbar">
+          <div>
+            <h2>主题列表</h2>
+          <p id="status">正在读取本机主题库...</p>
+          <p class="platform" id="platformStatus"></p>
+        </div>
+          <button id="saveTheme">保存为我的主题</button>
+          <button id="switchTheme" class="accent">启用当前主题</button>
+        </header>
+
+        <div class="content">
+          <div class="theme-grid" id="themeGrid"></div>
+          <form class="controls" id="controls">
+            <label>
+              主题名字
+              <input name="themeName" value="我的 Codex 主题" maxlength="60">
+            </label>
+            <label>
+              强调色
+              <input name="accent" type="color" value="#e05a2a">
+            </label>
+            <label>
+              背景模糊
+              <input name="backgroundBlur" type="range" min="0" max="24" value="0">
+            </label>
+            <label>
+              背景压暗
+              <input name="backgroundDim" type="range" min="0" max="75" value="18">
+            </label>
+            <label>
+              新聊天透明度
+              <input name="homeOpacity" type="range" min="0" max="100" value="54">
+            </label>
+            <label>
+              任务页透明度
+              <input name="taskOpacity" type="range" min="0" max="100" value="86">
+            </label>
+            <label>
+              动态效果
+              <select name="motionEffect">
+                <option value="none">关闭</option>
+                <option value="gt">GT 赛道</option>
+                <option value="rain">雨林雨线</option>
+                <option value="alpine">雪山光雾</option>
+              </select>
+            </label>
+            <label>
+              动态强度
+              <input name="motionIntensity" type="range" min="0" max="100" value="50">
+            </label>
+            <div class="toggles">
+              <label><input type="checkbox" name="rain" checked> 雨线</label>
+              <label><input type="checkbox" name="telemetry" checked> 扫描光</label>
+              <label><input type="checkbox" name="signalLights" checked> 信号灯</label>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

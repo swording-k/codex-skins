@@ -18,6 +18,7 @@
   const ART = THEME.art && typeof THEME.art === "object" ? THEME.art : {};
   const MOTION = THEME.motion && typeof THEME.motion === "object" ? THEME.motion : {};
   const UI = THEME.ui && typeof THEME.ui === "object" ? THEME.ui : {};
+  const STUDIO = THEME.studio && typeof THEME.studio === "object" ? THEME.studio : {};
   const DECORATIONS = Array.isArray(THEME.decorations) ? THEME.decorations : [];
   const ART_METADATA = THEME.artMetadata && typeof THEME.artMetadata === "object"
     ? THEME.artMetadata : null;
@@ -33,6 +34,7 @@
     "--dream-skin-name", "--dream-skin-tagline", "--dream-skin-project-prefix",
     "--dream-skin-project-label", "--dream-motion-intensity",
     "--ds-ui-density", "--ds-ui-radius", "--ds-home-opacity", "--ds-task-opacity",
+    "--dream-studio-bg-blur", "--dream-studio-bg-brightness", "--dream-studio-bg-scale",
   ];
   const installToken = {};
   const existingAnalysisCache = window[ANALYSIS_CACHE_KEY];
@@ -401,6 +403,17 @@
     setStyleProperty(root, "--ds-task-opacity", String(taskOpacity));
   };
 
+  const applyStudioEffects = (root) => {
+    const effects = STUDIO.effects && typeof STUDIO.effects === "object" ? STUDIO.effects : {};
+    const blur = typeof effects.backgroundBlur === "number" && Number.isFinite(effects.backgroundBlur)
+      ? clamp(effects.backgroundBlur, 0, 24) : 0;
+    const dim = typeof effects.backgroundDim === "number" && Number.isFinite(effects.backgroundDim)
+      ? clamp(effects.backgroundDim, 0, 0.75) : 0;
+    setStyleProperty(root, "--dream-studio-bg-blur", `${blur}px`);
+    setStyleProperty(root, "--dream-studio-bg-brightness", String(clamp(1 - dim * 0.55, 0.45, 1)));
+    setStyleProperty(root, "--dream-studio-bg-scale", String(blur > 0 ? 1.015 + blur / 360 : 1));
+  };
+
   const applyArtMetadata = (root) => {
     const profile = artAnalysis || ART_METADATA;
     const inferredSafe = profile?.safeArea || "center";
@@ -606,6 +619,7 @@
     applyTheme(root, shell);
     applyMotion(root);
     applyUi(root);
+    applyStudioEffects(root);
     applyArtMetadata(root);
     root.classList.add("codex-dream-skin");
     return shell;

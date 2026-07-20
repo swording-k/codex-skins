@@ -55,6 +55,9 @@
   --ds-task-immersive-edge: rgb(var(--ds-bg-rgb) / .82);
   --ds-task-immersive-mid: rgb(var(--ds-bg-rgb) / .74);
   --ds-task-immersive-far: rgb(var(--ds-bg-rgb) / .60);
+  --dream-studio-bg-blur: 0px;
+  --dream-studio-bg-brightness: 1;
+  --dream-studio-bg-scale: 1;
 }
 
 html.codex-dream-skin[data-dream-shell="light"] {
@@ -286,6 +289,9 @@ html.codex-dream-skin main.main-surface:not(.dream-skin-home-shell)::before {
   background-position: center, center, var(--ds-art-position);
   background-size: 100% 100%, 100% 100%, cover;
   opacity: .78;
+  filter: blur(var(--dream-studio-bg-blur)) brightness(var(--dream-studio-bg-brightness));
+  transform: scale(var(--dream-studio-bg-scale));
+  transform-origin: center;
 }
 
 html.codex-dream-skin[data-dream-shell="light"] main.main-surface:not(.dream-skin-home-shell)::before {
@@ -310,6 +316,7 @@ html.codex-dream-skin:is([data-dream-task-mode="ambient"], [data-dream-art-task-
   background-size: cover !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
+  filter: brightness(var(--dream-studio-bg-brightness));
 }
 
 html.codex-dream-skin:is([data-dream-task-mode="ambient"], [data-dream-art-task-mode="ambient"], [data-dream-task-mode="banner"], [data-dream-art-task-mode="banner"])[data-dream-art-wide="true"]:has(main.main-surface:not(.dream-skin-home-shell))

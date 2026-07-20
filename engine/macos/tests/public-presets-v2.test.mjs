@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "../../..");
 const expected = new Map([
-  ["preset-apex-pit", "gt-control"],
+  ["preset-porsche-gt3rs", "gt-control"],
   ["preset-iron-discipline", "gt-control"],
   ["preset-rainforest-focus", "glass-studio"],
   ["preset-alpine-lake-desk", "glass-studio"],

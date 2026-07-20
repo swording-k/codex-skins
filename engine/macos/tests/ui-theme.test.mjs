@@ -22,6 +22,8 @@ for (const property of [
   "--ds-ui-radius",
   "--ds-home-opacity",
   "--ds-task-opacity",
+  "--dream-studio-bg-blur",
+  "--dream-studio-bg-brightness",
 ]) {
   assert.match(renderer, new RegExp(property), `renderer should map ${property}`);
 }
@@ -40,6 +42,8 @@ assert.match(
 assert.match(css, /data-dream-ui-profile="gt-control"/, "GT profile CSS should exist.");
 assert.match(css, /data-dream-ui-profile="glass-studio"/, "Glass Studio profile CSS should exist.");
 assert.match(css, /data-dream-ui-profile="editorial"/, "Editorial profile CSS should exist.");
+assert.match(css, /--dream-studio-bg-blur/, "studio background blur should be a runtime CSS variable.");
+assert.match(css, /filter:\s*blur\(var\(--dream-studio-bg-blur\)\) brightness\(var\(--dream-studio-bg-brightness\)\)/, "studio background effects should apply to art layers.");
 for (const capability of [
   "aside.app-shell-left-panel",
   "bg-token-list-hover-background",
