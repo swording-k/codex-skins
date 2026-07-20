@@ -8,6 +8,7 @@ import {
   createStudioTheme,
   discoverThemes,
   themeAssetPath,
+  updateStudioTheme,
 } from "./lib/theme-library.mjs";
 import { getPlatformConfig } from "./lib/platform.mjs";
 
@@ -118,6 +119,25 @@ async function handleApi(req, res) {
       settings: body.settings,
     });
     sendJson(res, 201, { theme: { ...created.theme, themeDir: created.themeDir } });
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/api/apply") {
+    const body = await readBody(req);
+    const base = await findThemeById(body.baseId);
+    const saved = base.source === "preset"
+      ? await createStudioTheme({
+        baseThemeDir: base.themeDir,
+        themesRoot: platformConfig.themesRoot,
+        name: body.name,
+        settings: body.settings,
+      })
+      : await updateStudioTheme({
+        themeDir: base.themeDir,
+        name: body.name || base.name,
+        settings: body.settings,
+      });
+    await switchTheme(saved.id);
+    sendJson(res, 200, { ok: true, id: saved.id, theme: { ...saved.theme, themeDir: saved.themeDir } });
     return;
   }
   if (req.method === "POST" && url.pathname === "/api/switch") {

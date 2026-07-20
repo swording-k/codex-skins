@@ -43,6 +43,27 @@ function selectedTheme() {
   return state.themes.find((theme) => theme.id === state.selectedId) || state.themes[0] || null;
 }
 
+function percent(value, fallback) {
+  const number = Number(value);
+  return Math.round(Number.isFinite(number) ? number * 100 : fallback);
+}
+
+function syncControls(theme) {
+  if (!theme) return;
+  const settings = theme.settings || {};
+  controls.themeName.value = theme.source === "preset" ? `${theme.name} Remix` : theme.name;
+  controls.accent.value = settings.accent || theme.accent || "#e05a2a";
+  controls.backgroundBlur.value = Math.round(Number(settings.backgroundBlur ?? 0));
+  controls.backgroundDim.value = percent(settings.backgroundDim, 18);
+  controls.homeOpacity.value = percent(settings.homeOpacity, 54);
+  controls.taskOpacity.value = percent(settings.taskOpacity, 86);
+  controls.motionEffect.value = settings.motionEffect || "none";
+  controls.motionIntensity.value = percent(settings.motionIntensity, 50);
+  controls.rain.checked = Boolean(settings.rain);
+  controls.telemetry.checked = Boolean(settings.telemetry);
+  controls.signalLights.checked = Boolean(settings.signalLights);
+}
+
 function renderThemes() {
   grid.innerHTML = "";
   for (const theme of state.themes) {
@@ -59,9 +80,9 @@ function renderThemes() {
     `;
     card.addEventListener("click", () => {
       state.selectedId = theme.id;
-      controls.themeName.value = theme.source === "preset" ? `${theme.name} Remix` : theme.name;
-      controls.accent.value = theme.accent || "#e05a2a";
+      syncControls(theme);
       renderThemes();
+      setStatus(`已选择 ${theme.name}。调整后点击“保存并启用”才会作用到 Codex。`);
     });
     grid.appendChild(card);
   }
@@ -90,7 +111,9 @@ async function loadThemes() {
     ? `${state.platform.label}：支持保存和一键切换`
     : `${state.platform.label}：支持保存主题，暂不支持一键切换`;
   document.querySelector("#switchTheme").disabled = !state.platform.canSwitch;
+  document.querySelector("#applyTheme").disabled = !state.platform.canSwitch;
   renderThemes();
+  syncControls(selectedTheme());
   setStatus(`已读取 ${state.themes.length} 套主题。`);
 }
 
@@ -111,6 +134,27 @@ async function saveTheme() {
   setStatus("已保存到本机主题列表。");
 }
 
+async function applyTheme() {
+  const base = selectedTheme();
+  if (!base) return;
+  if (!state.platform?.canSwitch) {
+    setStatus(state.platform?.switchUnavailableReason || "当前平台暂不支持一键切换。");
+    return;
+  }
+  setStatus("正在保存设置并切换 Codex 主题...");
+  const body = await requestJson("/api/apply", {
+    method: "POST",
+    body: JSON.stringify({
+      baseId: base.id,
+      name: controls.themeName.value,
+      settings: settingsFromForm(),
+    }),
+  });
+  state.selectedId = body.id;
+  await loadThemes();
+  setStatus(`已保存并切换到 ${body.theme.name}。`);
+}
+
 async function switchTheme() {
   const theme = selectedTheme();
   if (!theme) return;
@@ -128,6 +172,7 @@ async function switchTheme() {
 
 document.querySelector("#refresh").addEventListener("click", loadThemes);
 document.querySelector("#saveTheme").addEventListener("click", saveTheme);
+document.querySelector("#applyTheme").addEventListener("click", applyTheme);
 document.querySelector("#switchTheme").addEventListener("click", switchTheme);
 
 loadThemes().catch((error) => setStatus(error.message));

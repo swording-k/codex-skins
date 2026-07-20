@@ -236,6 +236,11 @@ input[type="color"] {
   min-height: auto;
 }
 
+.hint {
+  color: #c9d3dc;
+  font-size: 12px;
+}
+
 @media (max-width: 980px) {
   .shell,
   .content {

@@ -26,10 +26,11 @@
         <header class="toolbar">
           <div>
             <h2>主题列表</h2>
-          <p id="status">正在读取本机主题库...</p>
-          <p class="platform" id="platformStatus"></p>
-        </div>
+            <p id="status">正在读取本机主题库...</p>
+            <p class="platform" id="platformStatus"></p>
+          </div>
           <button id="saveTheme">保存为我的主题</button>
+          <button id="applyTheme" class="accent">保存并启用</button>
           <button id="switchTheme" class="accent">启用当前主题</button>
         </header>
 
@@ -78,6 +79,7 @@
               <label><input type="checkbox" name="telemetry" checked> 扫描光</label>
               <label><input type="checkbox" name="signalLights" checked> 信号灯</label>
             </div>
+            <p class="hint">滑杆不会即时修改 Codex。调整后点击“保存并启用”，才会写入主题并切换到 Codex。</p>
           </form>
         </div>
       </section>

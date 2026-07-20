@@ -80,6 +80,22 @@ export async function readTheme(themeDir) {
 }
 
 function summarizeTheme(theme, themeDir, source) {
+  const home = theme.ui?.routes?.home || {};
+  const task = theme.ui?.routes?.task || {};
+  const settings = {
+    accent: theme.colors?.accent || "#6aa7ff",
+    backgroundBlur: theme.studio?.effects?.backgroundBlur ?? 0,
+    backgroundDim: theme.studio?.effects?.backgroundDim ?? 0.18,
+    homeOpacity: typeof home.opacity === "number" ? home.opacity : 0.5,
+    taskOpacity: typeof task.opacity === "number" ? task.opacity : 0.84,
+    motionEffect: theme.motion?.profile === "gt-broadcast" ? "gt"
+      : theme.motion?.profile === "rainforest" ? "rain"
+        : theme.motion?.profile === "alpine" ? "alpine" : "none",
+    motionIntensity: typeof theme.motion?.intensity === "number" ? theme.motion.intensity : 0.5,
+    rain: Boolean(theme.motion?.rain),
+    telemetry: Boolean(theme.motion?.telemetry),
+    signalLights: Boolean(theme.motion?.signalLights),
+  };
   return {
     id: theme.id,
     name: theme.name || theme.id,
@@ -92,6 +108,7 @@ function summarizeTheme(theme, themeDir, source) {
     themeDir,
     studio: Boolean(theme.studio),
     effects: theme.studio?.effects || null,
+    settings,
   };
 }
 
@@ -197,6 +214,14 @@ export async function createStudioTheme({ baseThemeDir, themesRoot = DEFAULT_THE
   await fs.copyFile(sourceImage, path.join(themeDir, theme.image));
   await fs.writeFile(path.join(themeDir, "theme.json"), `${JSON.stringify(theme, null, 2)}\n`);
   return { id, themeDir, theme };
+}
+
+export async function updateStudioTheme({ themeDir, name, settings }) {
+  const current = await readTheme(themeDir);
+  const theme = buildCustomizedTheme(current, { id: current.id, name: name || current.name, settings });
+  theme.image = current.image;
+  await fs.writeFile(path.join(themeDir, "theme.json"), `${JSON.stringify(theme, null, 2)}\n`);
+  return { id: current.id, themeDir, theme };
 }
 
 export function themeAssetPath(theme, kind = "background") {

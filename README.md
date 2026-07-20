@@ -38,6 +38,53 @@ http://127.0.0.1:56938/
 
 > Windows 说明：Theme Studio 会使用 `%APPDATA%\CodexDreamSkinStudio\themes` 作为主题库路径。当前仓库里的真实注入与切换脚本仍是 macOS 版本，所以 Windows 端会显示“可保存主题，暂不支持一键切换”。这不是忘了 Windows，而是先把产品结构留好，再做 Windows runtime。
 
+### 它为什么先是本地控制台
+
+Theme Studio 需要读取你本机的主题目录，并调用本机 Codex 的主题切换运行时，所以它不适合先做成纯公开网页。公开网页看起来更像产品，但它不能直接改你电脑里的 Codex。
+
+现在推荐的产品形态是：
+
+```text
+Codex Skill：负责理解你的想法，帮你生成完整主题。
+Theme Studio：负责主题列表、微调、保存、启用。
+本地运行时：负责把主题真正应用到 Codex Desktop。
+```
+
+后续可以把 Theme Studio 包成 macOS/Windows 桌面应用，或者菜单栏应用；但现阶段用本地浏览器界面最快、最安全，也不需要修改 Codex 官方应用代码。
+
+### 自己做的主题放哪里
+
+最简单：在 Theme Studio 里点击“保存为我的主题”，它会自动放到正确目录。
+
+手动放置时，一个主题目录至少需要：
+
+```text
+theme.json
+background.jpg 或 background.png
+```
+
+macOS 主题目录：
+
+```text
+~/Library/Application Support/CodexDreamSkinStudio/themes/<theme-id>/
+```
+
+Windows 预留主题目录：
+
+```text
+%APPDATA%\CodexDreamSkinStudio\themes\<theme-id>\
+```
+
+放进去后点击 Theme Studio 里的“刷新主题列表”。
+
+### 调节为什么要点保存
+
+右侧滑杆不会直接实时修改 Codex。调整后需要点：
+
+- `保存为我的主题`：复制出一套新的本地主题；
+- `保存并启用`：把当前调节写进主题，并立即切换到 Codex；
+- `启用当前主题`：只切换主题，不保存右侧新调节。
+
 最简单的用法：
 
 1. 把这个 GitHub 链接发给 Codex：`https://github.com/swording-k/codex-theme-creator`
