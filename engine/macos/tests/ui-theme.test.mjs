@@ -7,6 +7,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 const renderer = await fs.readFile(path.join(root, "assets", "renderer-inject.js"), "utf8");
 const css = await fs.readFile(path.join(root, "assets", "dream-skin.css"), "utf8");
+const injector = await fs.readFile(path.join(root, "scripts", "injector.mjs"), "utf8");
 
 for (const attribute of [
   "data-dream-ui-profile",
@@ -43,6 +44,8 @@ assert.match(css, /data-dream-ui-profile="gt-control"/, "GT profile CSS should e
 assert.match(css, /data-dream-ui-profile="glass-studio"/, "Glass Studio profile CSS should exist.");
 assert.match(css, /data-dream-ui-profile="editorial"/, "Editorial profile CSS should exist.");
 assert.match(css, /--dream-studio-bg-blur/, "studio background blur should be a runtime CSS variable.");
+assert.match(injector, /const studio\s*=[\s\S]*backgroundBlur/, "injector should validate safe studio effect settings.");
+assert.match(injector, /theme\.studio\s*=/, "injector should preserve safe studio effect settings.");
 assert.match(css, /filter:\s*blur\(var\(--dream-studio-bg-blur\)\) brightness\(var\(--dream-studio-bg-brightness\)\)/, "studio background effects should apply to art layers.");
 for (const capability of [
   "aside.app-shell-left-panel",

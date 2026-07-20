@@ -1,0 +1,14 @@
+{
+  "name": "codex-theme-creator-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/desktop-entry.test.mjs"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7"
+  }
+}

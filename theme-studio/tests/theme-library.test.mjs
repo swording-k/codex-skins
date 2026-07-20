@@ -5,7 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  LIVE_PREVIEW_THEME_ID,
   createStudioTheme,
+  createLivePreviewTheme,
   discoverThemes,
   normalizeStudioSettings,
   resolveThemeDirectory,
@@ -18,6 +20,17 @@ const repoRoot = path.resolve(here, "../..");
 const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "codex-theme-studio-"));
 const themesRoot = path.join(tmpRoot, "themes");
 await fs.mkdir(themesRoot, { recursive: true });
+const legacyPresetDir = path.join(themesRoot, "preset-old-local-background");
+await fs.mkdir(legacyPresetDir, { recursive: true });
+await fs.copyFile(
+  path.join(repoRoot, "dream-skin", "preset-porsche-gt3rs", "background.jpg"),
+  path.join(legacyPresetDir, "background.jpg"),
+);
+await fs.writeFile(path.join(legacyPresetDir, "theme.json"), `${JSON.stringify({
+  id: "preset-old-local-background",
+  name: "Old local preset",
+  image: "background.jpg",
+}, null, 2)}\n`);
 
 const themes = await discoverThemes({ repoRoot, themesRoot });
 assert.ok(
@@ -27,6 +40,11 @@ assert.ok(
 assert.ok(
   themes.some((theme) => theme.id === "preset-rainforest-focus" && theme.profile === "glass-studio"),
   "keeps preset UI profile in theme summary",
+);
+assert.equal(
+  themes.some((theme) => theme.id === "preset-old-local-background"),
+  false,
+  "hides legacy installed preset backgrounds from the personal library",
 );
 
 assert.throws(
@@ -82,6 +100,31 @@ assert.equal(written.motion.telemetry, true);
 assert.equal(written.studio.effects.backgroundBlur, 9);
 assert.equal(written.studio.effects.backgroundDim, 0.36);
 await fs.access(path.join(created.themeDir, written.image));
+
+const preview = await createLivePreviewTheme({
+  baseThemeDir: path.join(repoRoot, "dream-skin", "preset-rainforest-focus"),
+  themesRoot,
+  name: "Live slider preview",
+  settings: {
+    accent: "#44aa66",
+    backgroundBlur: 12,
+    backgroundDim: 0.42,
+    homeOpacity: 0.35,
+    taskOpacity: 0.74,
+    motionEffect: "rain",
+    motionIntensity: 0.8,
+  },
+});
+assert.equal(preview.id, LIVE_PREVIEW_THEME_ID, "live preview uses one stable temporary id");
+assert.equal(preview.theme.studio.temporary, true, "live preview is marked temporary");
+assert.equal(preview.theme.studio.effects.backgroundBlur, 12);
+await fs.access(path.join(preview.themeDir, preview.theme.image));
+const visibleAfterPreview = await discoverThemes({ repoRoot, themesRoot });
+assert.equal(
+  visibleAfterPreview.some((theme) => theme.id === LIVE_PREVIEW_THEME_ID),
+  false,
+  "live preview should not clutter the visible theme list",
+);
 
 const updated = await updateStudioTheme({
   themeDir: created.themeDir,

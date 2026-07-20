@@ -1,5 +1,6 @@
 .DS_Store
 *.swp
+node_modules/
 
 # Local drafts and generated sources. Public theme packs only need
 # theme.json, background.jpg, preview.png, and README.md.

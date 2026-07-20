@@ -6,6 +6,7 @@ import { getPlatformConfig } from "./platform.mjs";
 const THEME_ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
 const HEX_RE = /^#[0-9a-f]{6}$/i;
 const VALID_EFFECTS = new Set(["none", "gt", "rain", "alpine"]);
+export const LIVE_PREVIEW_THEME_ID = "studio-live-preview";
 
 export const DEFAULT_THEMES_ROOT = getPlatformConfig().themesRoot;
 
@@ -118,7 +119,9 @@ async function readThemeSummaries(root, source) {
   const summaries = [];
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
+    if (entry.name === LIVE_PREVIEW_THEME_ID) continue;
     if (source === "preset" && !entry.name.startsWith("preset-")) continue;
+    if (source === "local" && entry.name.startsWith("preset-")) continue;
     if (!THEME_ID_RE.test(entry.name)) continue;
     const themeDir = path.join(root, entry.name);
     try {
@@ -214,6 +217,35 @@ export async function createStudioTheme({ baseThemeDir, themesRoot = DEFAULT_THE
   await fs.copyFile(sourceImage, path.join(themeDir, theme.image));
   await fs.writeFile(path.join(themeDir, "theme.json"), `${JSON.stringify(theme, null, 2)}\n`);
   return { id, themeDir, theme };
+}
+
+async function writeThemeFromBase({ baseThemeDir, themesRoot, id, name, settings, temporary = false }) {
+  const baseTheme = await readTheme(baseThemeDir);
+  const themeDir = resolveThemeDirectory(themesRoot, id);
+  await fs.mkdir(themeDir, { recursive: true });
+  const theme = buildCustomizedTheme(baseTheme, { id, name, settings });
+  if (!theme.image) throw new Error("Base theme does not declare an image");
+  if (temporary) theme.studio.temporary = true;
+  const sourceImage = path.join(baseThemeDir, theme.image);
+  await fs.copyFile(sourceImage, path.join(themeDir, theme.image));
+  await fs.writeFile(path.join(themeDir, "theme.json"), `${JSON.stringify(theme, null, 2)}\n`);
+  return { id, themeDir, theme };
+}
+
+export async function createLivePreviewTheme({
+  baseThemeDir,
+  themesRoot = DEFAULT_THEMES_ROOT,
+  name = "Theme Studio Live Preview",
+  settings,
+}) {
+  return writeThemeFromBase({
+    baseThemeDir,
+    themesRoot,
+    id: LIVE_PREVIEW_THEME_ID,
+    name,
+    settings,
+    temporary: true,
+  });
 }
 
 export async function updateStudioTheme({ themeDir, name, settings }) {

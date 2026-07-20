@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Codex Theme Studio</title>
+    <title>Codex Theme Creator</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -11,21 +11,24 @@
       <aside class="sidebar">
         <div>
           <p class="eyebrow">Codex Theme Creator</p>
-          <h1>Theme Studio</h1>
-          <p class="lede">选一套底图，调清晰度、遮罩、动态和强调色，保存成自己的 Codex 主题。</p>
+          <h1>主题管理器</h1>
+          <p class="lede">让 Codex 负责创作主题，这里负责收藏、微调、保存和切换。</p>
         </div>
-        <div class="steps">
-          <span>1 选择主题</span>
-          <span>2 调整效果</span>
-          <span>3 保存并启用</span>
+        <div class="nav-list">
+          <button class="nav-item active" type="button">我的主题</button>
+          <button class="nav-item" type="button">创作入口</button>
+          <button class="nav-item" type="button">自动切换</button>
         </div>
-        <button class="primary" id="refresh">刷新主题列表</button>
+        <div class="sidebar-actions">
+          <button class="primary" id="createWithCodex">让 Codex 创作新主题</button>
+          <button id="refresh">刷新主题列表</button>
+        </div>
       </aside>
 
       <section class="workspace">
         <header class="toolbar">
           <div>
-            <h2>主题列表</h2>
+            <h2>主题库</h2>
             <p id="status">正在读取本机主题库...</p>
             <p class="platform" id="platformStatus"></p>
           </div>
@@ -35,8 +38,41 @@
         </header>
 
         <div class="content">
-          <div class="theme-grid" id="themeGrid"></div>
+          <div>
+            <section class="creator-panel">
+              <div>
+                <p class="eyebrow">Create with Codex</p>
+                <h3>一句话或一张参考图，交给 Codex 做完整主题包。</h3>
+              </div>
+              <button id="copyPrompt">复制创作提示词</button>
+            </section>
+            <section class="help-panel">
+              <div>
+                <p class="eyebrow">用户主题放哪里</p>
+                <p>让 Codex 创作完成后，主题会进入本机主题库。手动导入时，把包含 <code>theme.json</code> 和背景图的文件夹放进下面的目录，然后点刷新。</p>
+                <code id="themeLibraryPath">正在读取主题库路径...</code>
+              </div>
+            </section>
+            <section class="preview-panel" id="themePreview">
+              <div class="preview-art" id="previewArt"></div>
+              <div class="preview-dim"></div>
+              <div class="preview-sidebar">
+                <strong>Codex</strong>
+                <span>New chat</span>
+                <span class="selected">codex-skins</span>
+                <span>主题创作任务</span>
+              </div>
+              <div class="preview-main">
+                <p>What should we build in</p>
+                <strong id="previewTitle">codex-skins</strong>
+                <div class="preview-card">Explore and understand code</div>
+                <div class="preview-composer">Do anything</div>
+              </div>
+            </section>
+            <div class="theme-grid" id="themeGrid"></div>
+          </div>
           <form class="controls" id="controls">
+            <p class="panel-title">主题微调</p>
             <label>
               主题名字
               <input name="themeName" value="我的 Codex 主题" maxlength="60">
@@ -61,25 +97,7 @@
               任务页透明度
               <input name="taskOpacity" type="range" min="0" max="100" value="86">
             </label>
-            <label>
-              动态效果
-              <select name="motionEffect">
-                <option value="none">关闭</option>
-                <option value="gt">GT 赛道</option>
-                <option value="rain">雨林雨线</option>
-                <option value="alpine">雪山光雾</option>
-              </select>
-            </label>
-            <label>
-              动态强度
-              <input name="motionIntensity" type="range" min="0" max="100" value="50">
-            </label>
-            <div class="toggles">
-              <label><input type="checkbox" name="rain" checked> 雨线</label>
-              <label><input type="checkbox" name="telemetry" checked> 扫描光</label>
-              <label><input type="checkbox" name="signalLights" checked> 信号灯</label>
-            </div>
-            <p class="hint">滑杆不会即时修改 Codex。调整后点击“保存并启用”，才会写入主题并切换到 Codex。</p>
+            <p class="hint">这些调节会写入主题包，并实时预览到 Codex。动态效果暂时不开放，等质量达到宣传级再回来。</p>
           </form>
         </div>
       </section>

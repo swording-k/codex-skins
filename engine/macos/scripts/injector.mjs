@@ -399,6 +399,42 @@ async function loadTheme(themeDir) {
       task: route(rawRoutes.task, "ui.routes.task"),
     },
   };
+  if (raw.studio !== undefined && (!raw.studio || typeof raw.studio !== "object" || Array.isArray(raw.studio))) {
+    throw new Error(`${configPath} has an invalid studio field`);
+  }
+  const rawStudio = raw.studio || {};
+  if (rawStudio.version !== undefined && rawStudio.version !== 1) {
+    throw new Error(`${configPath} has an invalid studio.version field`);
+  }
+  if (
+    rawStudio.effects !== undefined
+    && (!rawStudio.effects || typeof rawStudio.effects !== "object" || Array.isArray(rawStudio.effects))
+  ) {
+    throw new Error(`${configPath} has an invalid studio.effects field`);
+  }
+  const rawEffects = rawStudio.effects || {};
+  const blur = (value, name) => {
+    if (value === undefined) return undefined;
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 24) {
+      throw new Error(`${configPath} has an invalid ${name} field`);
+    }
+    return value;
+  };
+  const dim = (value, name) => {
+    if (value === undefined) return undefined;
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 0.75) {
+      throw new Error(`${configPath} has an invalid ${name} field`);
+    }
+    return value;
+  };
+  const studio = {
+    version: rawStudio.version === undefined ? undefined : 1,
+    temporary: boolean(rawStudio.temporary, "studio.temporary"),
+    effects: {
+      backgroundBlur: blur(rawEffects.backgroundBlur, "studio.effects.backgroundBlur"),
+      backgroundDim: dim(rawEffects.backgroundDim, "studio.effects.backgroundDim"),
+    },
+  };
   if (raw.decorations !== undefined && (!Array.isArray(raw.decorations) || raw.decorations.length > 3)) {
     throw new Error(`${configPath} has an invalid decorations field`);
   }
@@ -450,6 +486,12 @@ async function loadTheme(themeDir) {
     theme.ui = {
       ...Object.fromEntries(Object.entries(ui).filter(([key, value]) => key !== "routes" && value !== undefined)),
       routes: Object.fromEntries(Object.entries(ui.routes).filter(([, value]) => value !== undefined)),
+    };
+  }
+  if (raw.studio !== undefined) {
+    theme.studio = {
+      ...Object.fromEntries(Object.entries(studio).filter(([key, value]) => key !== "effects" && value !== undefined)),
+      effects: Object.fromEntries(Object.entries(studio.effects).filter(([, value]) => value !== undefined)),
     };
   }
   if (raw.decorations !== undefined) theme.decorations = decorations;
