@@ -13,6 +13,9 @@ nav span, .eyebrow, figcaption { color: #55b6ff; }
 h1 { font-size: clamp(46px, 7vw, 94px); line-height: 1; margin: 12px 0 20px; letter-spacing: 0; }
 .hero-copy > p:not(.eyebrow) { font-size: 20px; line-height: 1.6; max-width: 520px; color: #d3d9e4; }
 .cta { display: inline-block; color: #07111d; background: #e9f5ff; padding: 14px 18px; font-weight: 750; text-decoration: none; margin: 16px 0; border-radius: 5px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.actions .cta { margin: 16px 0; }
+.secondary { display: inline-block; color: #e9f5ff; padding: 13px 16px; border: 1px solid rgba(233,245,255,.46); border-radius: 5px; font-weight: 700; text-decoration: none; }
 small { display: block; color: #a6b0c0; }
 .statement, .flow, .truth { padding: 96px clamp(24px, 6vw, 96px); }
 .statement { background: #f5f8fb; color: #102032; font-size: clamp(30px, 5vw, 64px); line-height: 1.18; font-weight: 750; }
@@ -26,6 +29,13 @@ figcaption { position: absolute; left: 20px; bottom: 18px; font-size: 12px; font
 .flow b { color: #ff7543; font-size: 14px; }
 .flow h2, .truth h2 { font-size: 26px; margin: 18px 0 10px; }
 .flow p, .truth p { line-height: 1.7; color: #aeb8c7; }
+.platforms { display: grid; grid-template-columns: repeat(2, 1fr); background: #f5f8fb; color: #102032; }
+.platforms > div { min-height: 300px; padding: 72px clamp(24px, 6vw, 96px); }
+.platforms .coming { background: #dce6ed; }
+.platforms h2 { margin: 12px 0; font-size: 42px; }
+.platforms p:not(.eyebrow) { max-width: 430px; line-height: 1.7; color: #425266; }
+.platforms a, .platforms span { display: inline-block; margin-top: 16px; color: #0c5e94; font-weight: 750; text-decoration: none; }
+.platforms span { color: #66788e; }
 .truth { background: #14273c; }
 .truth p { max-width: 720px; font-size: 17px; }
-@media (max-width: 720px) { .hero { min-height: 86vh; padding-bottom: 48px; } .gallery, .flow { grid-template-columns: 1fr; } figure { min-height: 300px; } .statement, .flow, .truth { padding-top: 64px; padding-bottom: 64px; } }
+@media (max-width: 720px) { .hero { min-height: 86vh; padding-bottom: 48px; } .gallery, .flow, .platforms { grid-template-columns: 1fr; } figure { min-height: 300px; } .statement, .flow, .truth { padding-top: 64px; padding-bottom: 64px; } .platforms > div { min-height: 0; padding-top: 56px; padding-bottom: 56px; } }
