@@ -29,6 +29,9 @@
     ],
     "mac": {
       "category": "public.app-category.utilities",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "target": ["dmg"],
       "artifactName": "Codex-Theme-Creator-${version}-${arch}.${ext}"
     },

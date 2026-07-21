@@ -17,6 +17,8 @@ assert.ok(packageJson.devDependencies.electron, "desktop app declares Electron")
 assert.ok(packageJson.devDependencies["electron-builder"], "desktop app declares a real desktop packager");
 assert.equal(packageJson.build.productName, "Codex Theme Creator", "packaged app has a product identity instead of generic Electron");
 assert.equal(packageJson.build.appId, "com.swordingk.codexthemecreator", "packaged app has a stable app identifier");
+assert.equal(packageJson.build.mac.hardenedRuntime, true, "public macOS builds enable the hardened runtime required for notarization");
+assert.equal(packageJson.build.mac.entitlements, "build/entitlements.mac.plist", "public macOS builds declare explicit notarization entitlements");
 assert.ok(packageJson.build.extraResources.length >= 4, "packaged app bundles its studio, engine, presets, and creator Skill");
 assert.match(main, /startThemeStudioServer/, "desktop shell starts the embedded Theme Studio server");
 assert.match(main, /process\.resourcesPath/, "packaged app resolves bundled resources instead of the development checkout");
