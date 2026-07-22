@@ -16,7 +16,7 @@
   "build": {
     "appId": "com.swordingk.codexthemecreator",
     "productName": "Codex Theme Creator",
-    "icon": "build/icon.icns",
+    "icon": "build/icon-chatgpt-theme.icns",
     "asar": false,
     "generateUpdatesFilesForAllChannels": true,
     "publish": [
@@ -72,7 +72,7 @@
       "title": "Codex Theme Creator"
     },
     "win": {
-      "icon": "build/icon.iconset/icon_256x256.png",
+      "icon": "build/icon-chatgpt-theme.iconset/icon_256x256.png",
       "target": [
         {
           "target": "nsis",

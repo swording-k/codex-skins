@@ -18,6 +18,8 @@ assert.ok(packageJson.devDependencies["electron-builder"], "desktop app declares
 assert.ok(packageJson.dependencies?.["electron-updater"], "desktop app ships its update client at runtime");
 assert.equal(packageJson.build.productName, "Codex Theme Creator", "packaged app has a product identity instead of generic Electron");
 assert.equal(packageJson.build.appId, "com.swordingk.codexthemecreator", "packaged app has a stable app identifier");
+assert.equal(packageJson.build.icon, "build/icon-chatgpt-theme.icns", "macOS package uses the ChatGPT theme-manager icon");
+assert.equal(packageJson.build.win.icon, "build/icon-chatgpt-theme.iconset/icon_256x256.png", "Windows package uses the same product icon");
 assert.equal(packageJson.build.mac.hardenedRuntime, true, "public macOS builds enable the hardened runtime required for notarization");
 assert.equal(packageJson.build.mac.entitlements, "build/entitlements.mac.plist", "public macOS builds declare explicit notarization entitlements");
 assert.ok(packageJson.build.extraResources.length >= 4, "packaged app bundles its studio, engine, presets, and creator Skill");
