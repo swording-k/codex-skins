@@ -8,6 +8,8 @@ body { margin: 0; }
 nav, .hero-copy { position: relative; z-index: 1; }
 nav { display: flex; justify-content: space-between; font-size: 13px; letter-spacing: 0; }
 nav span, .eyebrow, figcaption { color: #55b6ff; }
+.nav-actions { display: flex; align-items: center; gap: 20px; }
+.nav-actions a { color: #f4f6fa; text-decoration: none; }
 .hero-copy { width: min(620px, 100%); margin-top: auto; }
 .eyebrow { font-weight: 700; font-size: 13px; }
 h1 { font-size: clamp(46px, 7vw, 94px); line-height: 1; margin: 12px 0 20px; letter-spacing: 0; }
@@ -17,6 +19,8 @@ h1 { font-size: clamp(46px, 7vw, 94px); line-height: 1; margin: 12px 0 20px; let
 .actions .cta { margin: 16px 0; }
 .secondary { display: inline-block; color: #e9f5ff; padding: 13px 16px; border: 1px solid rgba(233,245,255,.46); border-radius: 5px; font-weight: 700; text-decoration: none; }
 small { display: block; color: #a6b0c0; }
+.download-stat { display: inline-block; margin-left: 12px; color: #d3d9e4; }
+.download-stat strong { color: #fff; }
 .statement, .flow, .truth { padding: 96px clamp(24px, 6vw, 96px); }
 .statement { background: #f5f8fb; color: #102032; font-size: clamp(30px, 5vw, 64px); line-height: 1.18; font-weight: 750; }
 .statement p { margin: 0; }
@@ -36,6 +40,8 @@ figcaption { position: absolute; left: 20px; bottom: 18px; font-size: 12px; font
 .platforms p:not(.eyebrow) { max-width: 430px; line-height: 1.7; color: #425266; }
 .platforms a, .platforms span { display: inline-block; margin-top: 16px; color: #0c5e94; font-weight: 750; text-decoration: none; }
 .platforms span { color: #66788e; }
+.windows-actions { display: flex; flex-wrap: wrap; gap: 16px; }
+.windows-actions a { margin-right: 4px; }
 .truth { background: #14273c; }
 .truth p { max-width: 720px; font-size: 17px; }
-@media (max-width: 720px) { .hero { min-height: 86vh; padding-bottom: 48px; } .gallery, .flow, .platforms { grid-template-columns: 1fr; } figure { min-height: 300px; } .statement, .flow, .truth { padding-top: 64px; padding-bottom: 64px; } .platforms > div { min-height: 0; padding-top: 56px; padding-bottom: 56px; } }
+@media (max-width: 720px) { .hero { min-height: 86vh; padding-bottom: 48px; } .gallery, .flow, .platforms { grid-template-columns: 1fr; } .nav-actions span { display: none; } figure { min-height: 300px; } .statement, .flow, .truth { padding-top: 64px; padding-bottom: 64px; } .platforms > div { min-height: 0; padding-top: 56px; padding-bottom: 56px; } .download-stat { display: block; margin: 8px 0 0; } }

@@ -38,6 +38,7 @@ export function getPlatformConfig({
       switchScript: path.join(repoRoot, "engine", "macos", "scripts", "switch-theme-macos.sh"),
       canRestoreDefault: true,
       restoreScript: path.join(repoRoot, "engine", "macos", "scripts", "restore-dream-skin-macos.sh"),
+      injectorPath: path.join(repoRoot, "engine", "macos", "scripts", "injector.mjs"),
       switchUnavailableReason: null,
     };
   }
@@ -45,7 +46,13 @@ export function getPlatformConfig({
     return {
       ...base,
       label: "Windows",
-      switchUnavailableReason: "Windows 端主题编辑和保存已预留，Codex 注入与一键切换运行时还在建设中。",
+      canSwitch: true,
+      switchScript: path.win32.join(repoRoot, "engine", "windows", "scripts", "switch-theme-windows.ps1"),
+      switchIdArgument: "-ThemeId",
+      canRestoreDefault: true,
+      restoreScript: path.win32.join(repoRoot, "engine", "windows", "scripts", "restore-theme-windows.ps1"),
+      injectorPath: path.win32.join(repoRoot, "engine", "macos", "scripts", "injector.mjs"),
+      switchUnavailableReason: null,
     };
   }
   return {

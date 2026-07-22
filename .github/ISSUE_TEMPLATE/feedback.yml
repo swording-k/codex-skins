@@ -1,0 +1,33 @@
+name: Product feedback
+description: Report a problem or suggest an improvement for Codex Theme Creator.
+title: "[Feedback] "
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS Apple silicon
+        - macOS Intel
+        - Windows x64
+        - Windows ARM64
+        - Product website
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: "For example: 0.1.1"
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What happened or what would you like to improve?
+      description: Screenshots are welcome. Remove private project names before uploading.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "Open the app, choose a theme, then..."

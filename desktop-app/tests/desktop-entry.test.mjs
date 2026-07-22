@@ -15,6 +15,7 @@ assert.ok(packageJson.scripts.start.includes("electron"), "desktop app can be la
 assert.ok(packageJson.scripts.dist, "desktop app declares a distributable build command");
 assert.ok(packageJson.devDependencies.electron, "desktop app declares Electron");
 assert.ok(packageJson.devDependencies["electron-builder"], "desktop app declares a real desktop packager");
+assert.ok(packageJson.dependencies?.["electron-updater"], "desktop app ships its update client at runtime");
 assert.equal(packageJson.build.productName, "Codex Theme Creator", "packaged app has a product identity instead of generic Electron");
 assert.equal(packageJson.build.appId, "com.swordingk.codexthemecreator", "packaged app has a stable app identifier");
 assert.equal(packageJson.build.mac.hardenedRuntime, true, "public macOS builds enable the hardened runtime required for notarization");
@@ -23,7 +24,7 @@ assert.ok(packageJson.build.extraResources.length >= 4, "packaged app bundles it
 assert.match(main, /startThemeStudioServer/, "desktop shell starts the embedded Theme Studio server");
 assert.match(main, /ensureBundledCreatorSkill/, "first launch automatically provisions the bundled creator Skill");
 assert.match(main, /creator-skill-version\.txt/, "creator Skill provisioning is versioned and does not rerun on every launch");
-assert.match(main, /await fs\.access\(installer\)/, "creator Skill provisioning verifies its bundled installer before recording success");
+assert.match(main, /provisionCreatorSkill/, "desktop app uses a cross-platform creator Skill provisioner");
 assert.match(main, /process\.resourcesPath/, "packaged app resolves bundled resources instead of the development checkout");
 assert.match(main, /BrowserWindow/, "desktop shell creates a native window");
 assert.match(main, /Tray/, "desktop shell creates a macOS menu bar / Windows tray icon");
@@ -39,7 +40,17 @@ assert.match(main, /\/api\/themes/, "tray menu can read the local theme library"
 assert.match(main, /\/api\/quick-switch/, "tray menu can switch both saved and bundled themes");
 assert.match(main, /恢复 Codex 默认外观/, "tray menu exposes the native Codex reset action");
 assert.match(main, /event\.preventDefault\(\)/, "closing the window hides it to the tray instead of quitting");
+assert.match(main, /checkForUpdates/, "desktop app checks GitHub Releases for newer versions");
+assert.match(main, /update-downloaded/, "desktop app offers to restart after an update is downloaded");
+assert.match(main, /检查更新/, "tray menu exposes a manual update check");
+assert.ok(packageJson.build.publish?.some((item) => item.provider === "github"), "build publishes updater metadata to GitHub Releases");
 await fs.access(path.join(repoRoot, "scripts", "start-theme-app.sh"));
 await fs.access(path.join(repoRoot, "scripts", "start-theme-app.ps1"));
+assert.ok(packageJson.scripts["dist:win"], "desktop app declares a Windows installer build");
+assert.equal(packageJson.build.win.target[0].target, "nsis", "Windows distribution uses a real NSIS installer");
+assert.match(packageJson.build.win.artifactName, /Setup/, "Windows installer has an understandable artifact name");
+assert.equal(packageJson.build.nsis.oneClick, false, "Windows installer gives users a normal install wizard");
+await fs.access(path.join(repoRoot, "engine", "windows", "scripts", "switch-theme-windows.ps1"));
+await fs.access(path.join(repoRoot, "engine", "windows", "scripts", "restore-theme-windows.ps1"));
 
 console.log("PASS: desktop app entry is packaged and starts Theme Studio.");

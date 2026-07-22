@@ -15,14 +15,17 @@ import {
 } from "./lib/theme-library.mjs";
 import { getPlatformConfig } from "./lib/platform.mjs";
 import { exportThemeArchive, importThemeArchive } from "./lib/theme-archive.mjs";
+import { creatorInstallPaths, provisionCreatorSkill } from "./lib/creator-provisioning.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
 const publicRoot = path.join(here, "public");
 const platformConfig = getPlatformConfig({ repoRoot });
-const codexHome = process.env.CODEX_HOME || path.join(process.env.HOME || "", ".codex");
-const creatorSkillPath = path.join(codexHome, "skills", "codex-theme-creator", "SKILL.md");
-const creatorEnginePath = path.join(codexHome, "codex-theme-creator", "engine", "macos", "scripts", "injector.mjs");
+const creatorPaths = creatorInstallPaths();
+const creatorSkillPath = path.join(creatorPaths.skillRoot, "SKILL.md");
+const creatorEnginePath = process.platform === "win32"
+  ? path.join(creatorPaths.platformEngineRoot, "scripts", "common-windows.ps1")
+  : path.join(creatorPaths.platformEngineRoot, "scripts", "injector.mjs");
 
 async function pathExists(file) {
   try {
@@ -38,7 +41,7 @@ async function creatorStatus() {
     pathExists(creatorSkillPath),
     pathExists(creatorEnginePath),
   ]);
-  const supported = process.platform === "darwin";
+  const supported = process.platform === "darwin" || process.platform === "win32";
   return {
     supported,
     skillInstalled,
@@ -50,27 +53,15 @@ async function creatorStatus() {
       ? (skillInstalled && engineInstalled
         ? "创作助手已安装。把想法或参考图发给 Codex，完成的主题会自动写入本机主题库。"
         : "先安装创作助手。安装后，Codex 才知道如何生成、校验并把主题写入主题库。")
-      : "Windows 端创作包格式已预留；Codex 注入与一键切换运行时仍在建设中。",
+      : "当前系统暂不支持自动安装和切换 Codex 主题。",
   };
 }
 
 function installCreatorSkill() {
-  if (process.platform !== "darwin") {
-    throw new Error("当前仅支持在 macOS 安装创作助手。");
+  if (!["darwin", "win32"].includes(process.platform)) {
+    throw new Error("当前系统不支持安装创作助手。");
   }
-  const installer = path.join(repoRoot, "scripts", "install-theme-creator.sh");
-  return new Promise((resolve, reject) => {
-    const child = spawn("/bin/bash", [installer], { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(stderr || stdout || `Creator Skill installation failed with code ${code}`));
-    });
-  });
+  return provisionCreatorSkill({ sourceRoot: repoRoot });
 }
 
 function parsePort(argv) {
@@ -136,12 +127,13 @@ async function findThemeById(id) {
   return theme;
 }
 
-function switchTheme(id) {
-  if (!platformConfig.canSwitch || !platformConfig.switchScript) {
-    throw new Error(platformConfig.switchUnavailableReason);
-  }
+function runPlatformScript(script, args = []) {
+  const executable = process.platform === "win32" ? "powershell.exe" : script;
+  const commandArgs = process.platform === "win32"
+    ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, ...args]
+    : args;
   return new Promise((resolve, reject) => {
-    const child = spawn(platformConfig.switchScript, ["--id", id], { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(executable, commandArgs, { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
@@ -149,34 +141,33 @@ function switchTheme(id) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(stderr || stdout || `Switch failed with code ${code}`));
+      else reject(new Error(stderr || stdout || `Platform runtime failed with code ${code}`));
     });
   });
+}
+
+function switchTheme(id) {
+  if (!platformConfig.canSwitch || !platformConfig.switchScript) {
+    throw new Error(platformConfig.switchUnavailableReason);
+  }
+  return runPlatformScript(platformConfig.switchScript, [platformConfig.switchIdArgument || "--id", id]);
 }
 
 function restoreDefaultTheme() {
   if (!platformConfig.canRestoreDefault || !platformConfig.restoreScript) {
     throw new Error(platformConfig.switchUnavailableReason);
   }
-  return new Promise((resolve, reject) => {
-    const child = spawn(platformConfig.restoreScript, [], { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(stderr || stdout || `Restore failed with code ${code}`));
-    });
-  });
+  return runPlatformScript(platformConfig.restoreScript);
 }
 
 function injectThemeDir(themeDir, timeoutMs = 8000) {
   if (!platformConfig.canSwitch) {
     throw new Error(platformConfig.switchUnavailableReason);
   }
-  const injector = path.join(repoRoot, "engine", "macos", "scripts", "injector.mjs");
+  const injector = platformConfig.injectorPath;
+  const childEnv = process.platform === "win32"
+    ? { ...process.env, ELECTRON_RUN_AS_NODE: "1" }
+    : process.env;
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
       injector,
@@ -187,7 +178,7 @@ function injectThemeDir(themeDir, timeoutMs = 8000) {
       themeDir,
       "--timeout-ms",
       String(timeoutMs),
-    ], { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] });
+    ], { cwd: repoRoot, env: childEnv, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {

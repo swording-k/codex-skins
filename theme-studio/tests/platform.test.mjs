@@ -26,8 +26,18 @@ assert.equal(
   win.themesRoot,
   path.win32.join("C:\\Users\\Alice\\AppData\\Roaming", "CodexDreamSkinStudio", "themes"),
 );
-assert.equal(win.canSwitch, false);
-assert.match(win.switchUnavailableReason, /Windows/);
+assert.equal(win.canSwitch, true);
+assert.equal(win.canRestoreDefault, true);
+assert.equal(
+  win.switchScript,
+  path.win32.join("C:\\repo", "engine", "windows", "scripts", "switch-theme-windows.ps1"),
+);
+assert.equal(
+  win.restoreScript,
+  path.win32.join("C:\\repo", "engine", "windows", "scripts", "restore-theme-windows.ps1"),
+);
+assert.equal(win.switchIdArgument, "-ThemeId");
+assert.equal(win.switchUnavailableReason, null);
 
 const linux = getPlatformConfig({
   platform: "linux",

@@ -23,6 +23,9 @@ assert.match(html, /id="importTheme"/, "app can import a portable theme package"
 assert.match(html, /安装创作助手/, "app can install the real Codex creation Skill instead of implying a copied prompt is enough");
 assert.match(html, /id="themePreview"/, "app has an in-app theme preview");
 assert.match(html, /用户主题放哪里/, "app explains where user-created themes live");
+assert.match(html, /id="feedbackLink"/, "app gives users a visible feedback entry");
+assert.match(html, /提交反馈/, "feedback entry uses plain user-facing language");
+assert.match(app, /swording-k\/codex-theme-creator\/issues\/new/, "app feedback opens the public issue form");
 assert.match(html, /请先在 Codex 设置中使用深色外观/, "app makes the dark-mode compatibility requirement explicit");
 assert.match(app, /copyCreatePrompt/, "creation entry copies the Codex prompt");
 assert.match(app, /loadCreatorStatus/, "app checks the creation Skill before offering the Codex prompt");

@@ -419,6 +419,9 @@ async function switchTheme() {
 }
 
 document.querySelector("#refresh").addEventListener("click", loadThemes);
+document.querySelector("#feedbackLink").addEventListener("click", () => {
+  window.open("https://github.com/swording-k/codex-theme-creator/issues/new?template=feedback.yml", "_blank", "noopener");
+});
 document.querySelector("#createWithCodex").addEventListener("click", copyCreatePrompt);
 document.querySelector("#installCreator").addEventListener("click", installCreator);
 document.querySelector("#copyPrompt").addEventListener("click", copyCreatePrompt);

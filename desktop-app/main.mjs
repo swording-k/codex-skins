@@ -1,7 +1,6 @@
-import { app, BrowserWindow, Menu, Tray, nativeImage, shell } from "electron";
+import { app, BrowserWindow, Menu, Tray, dialog, nativeImage, shell } from "electron";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -9,10 +8,17 @@ const appRoot = app.isPackaged ? process.resourcesPath : path.resolve(here, ".."
 const { startThemeStudioServer } = await import(
   pathToFileURL(path.join(appRoot, "theme-studio", "server.mjs")).href,
 );
+const { provisionCreatorSkill } = await import(
+  pathToFileURL(path.join(appRoot, "theme-studio", "lib", "creator-provisioning.mjs")).href,
+);
+const updaterModule = await import("electron-updater");
+const autoUpdater = updaterModule.autoUpdater ?? updaterModule.default?.autoUpdater;
 let serverHandle = null;
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
+let updateCheckInFlight = false;
+let interactiveUpdateCheck = false;
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
 const macTrayIconSvg = `
@@ -63,30 +69,12 @@ async function createWindow() {
   await mainWindow.loadURL(serverHandle.url);
 }
 
-async function runInstaller(script) {
-  return new Promise((resolve, reject) => {
-    const child = spawn("/bin/bash", [script], { cwd: appRoot, stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(stderr || stdout || `Creator Skill installation failed with code ${code}`));
-    });
-  });
-}
-
 async function ensureBundledCreatorSkill() {
-  if (process.platform !== "darwin") return;
   const marker = path.join(app.getPath("userData"), "creator-skill-version.txt");
   const version = app.getVersion();
   const installedVersion = await fs.readFile(marker, "utf8").catch(() => "");
   if (installedVersion.trim() === version) return;
-  const installer = path.join(appRoot, "scripts", "install-theme-creator.sh");
-  await fs.access(installer);
-  await runInstaller(installer);
+  await provisionCreatorSkill({ sourceRoot: appRoot, home: app.getPath("home") });
   await fs.writeFile(marker, `${version}\n`, "utf8");
 }
 
@@ -125,6 +113,75 @@ async function switchTheme(id) {
   });
 }
 
+async function checkForUpdates({ interactive = false } = {}) {
+  if (!app.isPackaged || !autoUpdater || updateCheckInFlight) return;
+  updateCheckInFlight = true;
+  interactiveUpdateCheck = interactive;
+  try {
+    await autoUpdater.checkForUpdates();
+  } catch (error) {
+    updateCheckInFlight = false;
+    if (interactive) {
+      await dialog.showMessageBox(mainWindow, {
+        type: "error",
+        title: "检查更新失败",
+        message: "暂时无法连接更新服务。",
+        detail: error.message,
+      });
+    }
+  }
+}
+
+function configureAutoUpdates() {
+  if (!app.isPackaged || !autoUpdater) return;
+  autoUpdater.autoDownload = false;
+  autoUpdater.allowPrerelease = true;
+  autoUpdater.on("update-available", async (info) => {
+    updateCheckInFlight = false;
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "发现新版本",
+      message: `Codex Theme Creator ${info.version} 已发布。`,
+      detail: "下载完成后可以一键重启更新。",
+      buttons: ["下载更新", "稍后"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) await autoUpdater.downloadUpdate();
+  });
+  autoUpdater.on("update-not-available", async () => {
+    updateCheckInFlight = false;
+    if (!interactiveUpdateCheck) return;
+    interactiveUpdateCheck = false;
+    await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "已经是最新版",
+      message: `当前版本 ${app.getVersion()} 已是最新版。`,
+    });
+  });
+  autoUpdater.on("update-downloaded", async (info) => {
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "更新已准备好",
+      message: `版本 ${info.version} 已下载完成。`,
+      buttons: ["立即重启更新", "稍后"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) {
+      isQuitting = true;
+      autoUpdater.quitAndInstall();
+    }
+  });
+  autoUpdater.on("error", (error) => {
+    updateCheckInFlight = false;
+    console.error(`Update check failed: ${error.message}`);
+  });
+  setTimeout(() => void checkForUpdates(), 5000);
+  const timer = setInterval(() => void checkForUpdates(), 6 * 60 * 60 * 1000);
+  timer.unref?.();
+}
+
 async function refreshTrayMenu() {
   if (!tray) return;
   const themes = await availableThemes();
@@ -142,6 +199,7 @@ async function refreshTrayMenu() {
       await refreshTrayMenu();
     } },
     { label: "刷新主题列表", click: () => void refreshTrayMenu() },
+    { label: "检查更新", click: () => void checkForUpdates({ interactive: true }) },
     { type: "separator" },
     themeItems.length
       ? { label: "快速切换主题", submenu: themeItems }
@@ -173,6 +231,7 @@ if (!hasSingleInstanceLock) {
   });
 
   app.whenReady().then(async () => {
+    process.env.CODEX_THEME_NODE = process.execPath;
     try {
       await ensureBundledCreatorSkill();
     } catch (error) {
@@ -181,6 +240,7 @@ if (!hasSingleInstanceLock) {
     serverHandle = await startThemeStudioServer({ port: 0 });
     await createTray();
     await createWindow();
+    configureAutoUpdates();
   });
 
   app.on("activate", () => {
