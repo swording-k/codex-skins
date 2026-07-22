@@ -79,12 +79,13 @@ export async function exportThemeArchive({ themeDir }) {
   const theme = await readTheme(themeDir);
   const image = assertFlatFile(theme.image, "theme image");
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "codex-theme-export-"));
-  const archivePath = path.join(tempRoot, portableFilename(theme.name));
+  const filename = portableFilename(theme.name);
+  const archivePath = path.join(tempRoot, process.platform === "win32" ? "outgoing.zip" : filename);
   try {
     await createArchive({ archivePath, sourceDir: themeDir, files: ["theme.json", image] });
     const data = await fs.readFile(archivePath);
     if (!data.length || data.length > MAX_ARCHIVE_BYTES) throw new Error("Theme package is too large");
-    return { filename: path.basename(archivePath), data };
+    return { filename, data };
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
@@ -95,7 +96,7 @@ export async function importThemeArchive({ archive, themesRoot }) {
     throw new Error("Invalid theme package size");
   }
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "codex-theme-import-"));
-  const archivePath = path.join(tempRoot, "incoming.ctheme");
+  const archivePath = path.join(tempRoot, process.platform === "win32" ? "incoming.zip" : "incoming.ctheme");
   const extractedRoot = path.join(tempRoot, "contents");
   try {
     await fs.writeFile(archivePath, archive, { mode: 0o600 });
