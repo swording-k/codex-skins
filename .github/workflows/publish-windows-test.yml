@@ -1,0 +1,48 @@
+name: Publish Windows test installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Desktop App version without the v prefix"
+        required: true
+        default: "0.1.3-beta.12"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop-app/package-lock.json
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          $version = (Get-Content desktop-app/package.json | ConvertFrom-Json).version
+          if ($version -ne '${{ inputs.version }}') { throw "package.json version $version does not match requested version" }
+      - run: npm ci
+        working-directory: desktop-app
+      - run: npx electron-builder --win nsis --x64 --arm64 --publish never
+        working-directory: desktop-app
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          target_commitish: main
+          name: Codex Theme Creator v${{ inputs.version }}
+          prerelease: true
+          draft: false
+          body: |
+            Windows test build for Microsoft Store Codex.
+
+            - ARM64: Windows virtual machines on Apple Silicon.
+            - x64: Intel/AMD Windows PCs.
+            - Verify install, theme switch, restore, import/export, and tray actions before treating it as stable.
+          files: |
+            desktop-app/dist/Codex-Theme-Creator-Setup-${{ inputs.version }}-x64.exe
+            desktop-app/dist/Codex-Theme-Creator-Setup-${{ inputs.version }}-arm64.exe
