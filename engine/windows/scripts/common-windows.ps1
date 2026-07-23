@@ -125,7 +125,9 @@ function Invoke-ThemeNode {
   $env:ELECTRON_RUN_AS_NODE = "1"
   try {
     & $NodePath @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "Theme runtime command failed with exit code $LASTEXITCODE." }
+    if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+      throw "Theme runtime command failed with exit code $LASTEXITCODE."
+    }
   } finally {
     $env:ELECTRON_RUN_AS_NODE = $previous
   }
