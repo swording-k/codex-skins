@@ -9,6 +9,11 @@
 - `preview.png`: GitHub 和自媒体预览图，不应作为 Dream Skin 背景导入。
 - `PROMPT.md`: 主题来源与复刻提示。
 
+## 来源
+
+- Public source pack: https://codex-theme-gallery.howardhua.chatgpt.site/themes/caishen-readable?utm_source=swording-codex-theme-creator&utm_medium=preset-readme&utm_campaign=caishen-readable
+- GitHub release ZIP: https://github.com/ChannelerH/codex-skin-packs/releases/download/v0.1.0/caishen-readable.zip
+
 ## 设计
 
 - 左侧 `x=0%..56%` 保持浅暖留白，适合放 Codex 导航和正文。
