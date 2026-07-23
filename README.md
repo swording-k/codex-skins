@@ -6,7 +6,7 @@
 
 [打开产品官网](https://swording-k.github.io/codex-theme-creator/) · [下载 macOS Beta](https://github.com/swording-k/codex-theme-creator/releases/download/v0.1.1/Codex-Theme-Creator-0.1.1-arm64.dmg) · [提交问题或建议](https://github.com/swording-k/codex-theme-creator/issues/new?template=feedback.yml)
 
-> 当前公开 Beta 仅支持 Apple 芯片 Mac。Windows 版仍在技术验证中，暂不提供可启用 Codex 主题的公开下载。
+> Windows 主题运行时使用 Microsoft Store 版 Codex 的官方应用包启动接口。Windows 安装包仍需完成真实设备验证后才会作为稳定版公开发布。
 
 ![Codex Theme Creator 的 GT 赛车主题效果](media/showcase/01-porsche-gt3rs.jpg)
 
@@ -102,7 +102,7 @@ cd codex-theme-creator
 | 平台 | 当前状态 |
 | --- | --- |
 | macOS Apple 芯片 | 公开 Beta：主题库、创作助手、微调、导入导出、菜单栏切换 |
-| Windows | 主题库和主题包格式仍在验证；当前官方 Windows Codex 不支持本项目所需的主题启用方式，因此暂不发布 Windows 换肤版。 |
+| Windows | 支持 Microsoft Store 版 Codex 的主题库、主题包和本地注入运行时；在 ARM64 与 x64 实机完成安装、切换、恢复验证前仍标为测试版。 |
 
 ## 已知边界
 

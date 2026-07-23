@@ -509,8 +509,8 @@ async function switchTheme() {
 
 function readableRuntimeError(error) {
   const message = error instanceof Error ? error.message : String(error || "");
-  if (message.includes("Microsoft Store Codex cannot accept the local runtime launch arguments")) {
-    return "当前 Windows 版 Codex 暂不支持启用主题。主题已经保存到本机，但不会修改 Codex；无需另找或下载其他 Codex。";
+  if (message.includes("Microsoft Store Codex package") || message.includes("OpenAI.Codex")) {
+    return "没有检测到可用的 Microsoft Store 版 Codex。请先从 Microsoft Store 安装或更新 Codex，然后重新点击保存并启用。";
   }
   return message;
 }

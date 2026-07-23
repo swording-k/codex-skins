@@ -85,6 +85,78 @@ function Test-StorePackagedCodex {
   return $ExecutablePath -match "\\Program Files\\WindowsApps\\"
 }
 
+function Get-StoreCodexInstall {
+  # Windows Store packages must be launched through their registered identity.
+  # Starting the executable inside WindowsApps drops the CDP arguments.
+  $packages = @(Get-AppxPackage -Name "OpenAI.Codex" -ErrorAction Stop | Sort-Object Version -Descending)
+  foreach ($package in $packages) {
+    if (-not $package.InstallLocation -or -not $package.PackageFamilyName -or
+      "$($package.SignatureKind)" -ine "Store" -or [bool]$package.IsDevelopmentMode) { continue }
+    $executable = Join-Path $package.InstallLocation "app\\ChatGPT.exe"
+    if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { continue }
+    try {
+      $manifest = Get-AppxPackageManifest -Package $package -ErrorAction Stop
+      $applications = @($manifest.Package.Applications.Application | Where-Object {
+        "$($_.Executable)".Replace('/', '\\') -ieq "app\\ChatGPT.exe"
+      })
+      if ($applications.Count -ne 1) { continue }
+      $applicationId = "$($applications[0].Id)"
+      $family = "$($package.PackageFamilyName)"
+      if ($family -cnotmatch "^[A-Za-z0-9._-]{1,128}$" -or
+        $applicationId -cnotmatch "^[A-Za-z0-9._-]{1,64}$") { continue }
+      return [pscustomobject]@{ Executable = $executable; AppUserModelId = "$family!$applicationId" }
+    } catch {
+      continue
+    }
+  }
+  throw "The official Microsoft Store Codex package (OpenAI.Codex) was not found or could not be verified."
+}
+
+function Initialize-StoreCodexPackageLauncher {
+  if ("CodexThemeCreator.PackageLauncher" -as [type]) { return }
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+namespace CodexThemeCreator {
+  [ComImport]
+  [Guid("2e941141-7f97-4756-ba1d-9decde894a3d")]
+  [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  internal interface IApplicationActivationManager {
+    [PreserveSig]
+    int ActivateApplication([MarshalAs(UnmanagedType.LPWStr)] string appUserModelId,
+      [MarshalAs(UnmanagedType.LPWStr)] string arguments, uint options, out uint processId);
+  }
+  [ComImport]
+  [Guid("45ba127d-10a8-46ea-8ab7-56ea9078943c")]
+  internal class ApplicationActivationManager {}
+  public static class PackageLauncher {
+    public static uint Launch(string appUserModelId, string arguments) {
+      var manager = (IApplicationActivationManager)new ApplicationActivationManager();
+      try {
+        uint processId;
+        int result = manager.ActivateApplication(appUserModelId, arguments ?? string.Empty, 0, out processId);
+        Marshal.ThrowExceptionForHR(result);
+        return processId;
+      } finally {
+        if (Marshal.IsComObject(manager)) Marshal.FinalReleaseComObject(manager);
+      }
+    }
+  }
+}
+'@
+}
+
+function Start-StoreCodexWithCdp {
+  param([int]$Port)
+  $codex = Get-StoreCodexInstall
+  Initialize-StoreCodexPackageLauncher
+  $arguments = "--remote-debugging-address=127.0.0.1 --remote-debugging-port=$Port"
+  $processId = [CodexThemeCreator.PackageLauncher]::Launch($codex.AppUserModelId, $arguments)
+  if ($processId -le 0) { throw "Windows did not return a Codex process ID after Microsoft Store package activation." }
+  return $codex.Executable
+}
+
 function Stop-ChatGPTProcesses {
   Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -in @("ChatGPT.exe", "Codex.exe") } |
@@ -103,14 +175,15 @@ function Start-ChatGPTWithCdp {
   if (Test-ThemeCdp -Port $Port) { return (Get-ChatGPTExecutable) }
   $executable = Get-ChatGPTExecutable
   $isStorePackaged = Test-StorePackagedCodex -ExecutablePath $executable
-  if ($isStorePackaged) {
-    throw "Microsoft Store Codex cannot accept the local runtime launch arguments. The theme was saved locally but cannot be activated on the current Windows Codex app."
-  }
   Stop-ChatGPTProcesses
-  Start-Process -FilePath $executable -ArgumentList @(
-    "--remote-debugging-address=127.0.0.1",
-    "--remote-debugging-port=$Port"
-  ) | Out-Null
+  if ($isStorePackaged) {
+    $executable = Start-StoreCodexWithCdp -Port $Port
+  } else {
+    Start-Process -FilePath $executable -ArgumentList @(
+      "--remote-debugging-address=127.0.0.1",
+      "--remote-debugging-port=$Port"
+    ) | Out-Null
+  }
   $deadline = (Get-Date).AddSeconds(45)
   while ((Get-Date) -lt $deadline) {
     if (Test-ThemeCdp -Port $Port) { return $executable }

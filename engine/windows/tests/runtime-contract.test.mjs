@@ -12,13 +12,15 @@ const switcher = await fs.readFile(path.join(windowsRoot, "scripts", "switch-the
 const restore = await fs.readFile(path.join(windowsRoot, "scripts", "restore-theme-windows.ps1"), "utf8");
 
 assert.match(common, /Get-AppxPackage/, "runtime discovers the Microsoft Store ChatGPT package");
-assert.match(common, /Test-StorePackagedCodex/, "runtime identifies Store-packaged Codex before reporting a launch failure");
-assert.match(common, /Microsoft Store Codex cannot accept the local runtime launch arguments/, "Store installations receive a clear compatibility explanation without PowerShell encoding hazards");
+assert.match(common, /Get-StoreCodexInstall/, "runtime validates the registered Microsoft Store Codex package");
+assert.match(common, /IApplicationActivationManager/, "runtime uses the Windows package activation API for Store Codex");
+assert.match(common, /ActivateApplication/, "runtime passes CDP launch arguments through application package activation");
+assert.match(common, /OpenAI\.Codex/, "runtime targets the official Codex Store package identity");
 assert.doesNotMatch(common, /[^\x00-\x7F]/, "Windows PowerShell runtime scripts remain ASCII-only for Windows PowerShell 5.1 compatibility");
 const storeCheck = common.indexOf("Test-StorePackagedCodex -ExecutablePath $executable");
-const storeFailure = common.indexOf("if ($isStorePackaged)", storeCheck);
+const storeLaunch = common.indexOf("Start-StoreCodexWithCdp -Port $Port", storeCheck);
 const stopCall = common.indexOf("Stop-ChatGPTProcesses", storeCheck);
-assert.ok(storeCheck >= 0 && storeFailure > storeCheck && stopCall > storeFailure, "Store compatibility must be checked before any Codex process is closed");
+assert.ok(storeCheck >= 0 && stopCall > storeCheck && storeLaunch > stopCall, "Store Codex is closed before it is relaunched through package activation");
 assert.match(common, /ChatGPT\.exe|Codex\.exe/, "runtime supports current and legacy executable names");
 assert.match(common, /127\.0\.0\.1/, "runtime binds CDP to loopback only");
 assert.match(common, /remote-debugging-address=127\.0\.0\.1/, "ChatGPT is launched with a loopback-only debugger");
