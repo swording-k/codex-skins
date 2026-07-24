@@ -10,6 +10,12 @@ const common = await fs.readFile(path.join(windowsRoot, "scripts", "common-windo
 const start = await fs.readFile(path.join(windowsRoot, "scripts", "start-theme-windows.ps1"), "utf8");
 const switcher = await fs.readFile(path.join(windowsRoot, "scripts", "switch-theme-windows.ps1"), "utf8");
 const restore = await fs.readFile(path.join(windowsRoot, "scripts", "restore-theme-windows.ps1"), "utf8");
+const runtimeRoot = path.join(windowsRoot, "runtime");
+const runtimeStart = await fs.readFile(path.join(runtimeRoot, "scripts", "start-dream-skin.ps1"), "utf8");
+const runtimeCommon = await fs.readFile(path.join(runtimeRoot, "scripts", "common-windows.ps1"), "utf8");
+const runtimeInjector = await fs.readFile(path.join(runtimeRoot, "scripts", "injector.mjs"), "utf8");
+const runtimeRestore = await fs.readFile(path.join(runtimeRoot, "scripts", "restore-dream-skin.ps1"), "utf8");
+const runtimeTheme = await fs.readFile(path.join(runtimeRoot, "scripts", "theme-windows.ps1"), "utf8");
 
 assert.match(common, /Get-AppxPackage/, "runtime discovers the Microsoft Store ChatGPT package");
 assert.match(common, /Get-StoreCodexInstall/, "runtime validates the registered Microsoft Store Codex package");
@@ -33,7 +39,16 @@ assert.match(common, /Quote-ProcessArgument/, "detached injector arguments remai
 assert.match(common, /stage-theme\.mjs/, "theme switching uses the shared stable package staging implementation");
 assert.match(switcher, /StageThemePath/, "theme switching validates and stages a stable package snapshot");
 assert.match(switcher, /--check-payload/, "theme switching validates the exact staged payload before publishing");
-assert.match(restore, /--remove/, "restore removes injected DOM and CSS through the shared injector");
+assert.match(restore, /restore-dream-skin\.ps1/, "restore delegates to the complete Windows runtime");
 assert.doesNotMatch(restore, /Remove-Item.+themes/i, "restore never deletes the user's theme library");
+assert.match(start, /start-dream-skin\.ps1/, "the app delegates Windows activation to the complete runtime");
+assert.match(runtimeStart, /Get-DreamSkinVerifiedCdpIdentity/, "runtime verifies that Codex owns the CDP endpoint");
+assert.match(runtimeStart, /--browser-id/, "injector is bound to the verified Codex browser identity");
+assert.match(runtimeStart, /IApplicationActivationManager|Start-DreamSkinCodex/, "runtime uses registered Store app activation");
+assert.match(runtimeCommon, /OpenAI\.Codex/, "runtime accepts only the official Codex Store package identity");
+assert.match(runtimeCommon, /ActivateApplication/, "runtime launches Store Codex with its registered application identity");
+assert.match(runtimeInjector, /browser-id/, "runtime injector rejects an unverified browser target");
+assert.match(runtimeRestore, /Stop-DreamSkinRecordedInjector/, "restore stops the verified background injector");
+assert.match(runtimeTheme, /Invoke-DreamSkinNative/, "metadata validation also supports the packaged Electron Node runtime");
 
-console.log("PASS: Windows runtime contract covers discovery, injection, switching, and restore.");
+console.log("PASS: Windows runtime contract covers verified Store activation, injection, switching, and restore.");
